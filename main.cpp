@@ -8,9 +8,9 @@ const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 480;
 const int TILE_SIZE = 32;
 const int SPEED = 5;
-const int MAP_WIDTH = 20;
-const int MAP_HEIGHT = 15;
-int tileMap[MAP_HEIGHT][MAP_WIDTH] = {
+const int MAP_WIDTH = 50;
+const int MAP_HEIGHT = 30;
+int tileMap1[MAP_HEIGHT][MAP_WIDTH] = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,0},
     {0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,0},
@@ -24,8 +24,30 @@ int tileMap[MAP_HEIGHT][MAP_WIDTH] = {
     {0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
     {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2}
 };
+
+int tileMap2[MAP_HEIGHT][MAP_WIDTH] = {
+    {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,1,0,1,0,1,0,0,0,1,1,1,0,0,0,0,0,1,1,0},
+    {0,1,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0},
+    {0,1,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0},
+    {0,1,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0},
+    {0,1,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0},
+    {0,1,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0},
+    {0,1,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
+    {0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+    {0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,1,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
+    {0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0},
+    {0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,2}
+};
+int cameraX = 0;
+int cameraY = 0;
+int (*currentMap)[MAP_WIDTH] = tileMap1;
+
+
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 SDL_Texture* mapTexture = nullptr;
@@ -113,7 +135,11 @@ void Render() {
     RenderMap(mapTexture);
 
     // 플레이어랜더링
-    SDL_RenderCopy(renderer, playerTexture, NULL, &playerRect);
+    //플레이어 위치 보정 
+    SDL_Rect screenPlayer = playerRect;
+    screenPlayer.x -= cameraX;
+    screenPlayer.y -= cameraY;
+    SDL_RenderCopy(renderer, playerTexture, NULL, &screenPlayer);
 
     SDL_RenderPresent(renderer);
 }
@@ -134,11 +160,12 @@ void RenderMap(SDL_Texture* tileTexture) {
 
     for (int y = 0; y < MAP_HEIGHT; y++) {
         for (int x = 0; x < MAP_WIDTH; x++) {
-            int tile = tileMap[y][x];
+            int tile = currentMap[y][x];
             src.x = tile * TILE_SIZE;
             src.y = 0;
-            dest.x = x * TILE_SIZE;
-            dest.y = y * TILE_SIZE;
+
+            dest.x = x * TILE_SIZE - cameraX;
+            dest.y = y * TILE_SIZE - cameraY;
 
             SDL_RenderCopy(renderer, tileTexture, &src, &dest);
         }
@@ -153,7 +180,10 @@ void TryMovePlayer(int dx, int dy) {
     int tileX = nextX / TILE_SIZE;
     int tileY = nextY / TILE_SIZE;
 
-    if (tileMap[tileY][tileX] == 0) {
+    //범위체크 (안하면 out-of-bounds crash 가능)
+    if (tileX < 0 || tileY < 0 || tileX >= MAP_WIDTH || tileY >= MAP_HEIGHT) return;
+
+    if (currentMap[tileY][tileX] == 0 || currentMap[tileY][tileX] == 2) {
         playerRect.x = nextX;
         playerRect.y = nextY;
     }
@@ -161,5 +191,35 @@ void TryMovePlayer(int dx, int dy) {
 
 
 void Update() {
-   
+    //카메라 위치 계산
+    cameraX = playerRect.x - WINDOW_WIDTH / 2 + TILE_SIZE / 2;
+    cameraY = playerRect.y - WINDOW_HEIGHT / 2 + TILE_SIZE / 2;
+
+    //카메라가 맨 바깥으로 못나가게 고정 
+    if (cameraX < 0) cameraX = 0;
+    if (cameraY < 0) cameraY = 0;
+
+    int maxCameraX = MAP_WIDTH * TILE_SIZE - WINDOW_WIDTH;
+    int maxCameraY = MAP_HEIGHT * TILE_SIZE - WINDOW_HEIGHT;
+
+    if (cameraX > maxCameraX) cameraX = maxCameraX;
+    if (cameraY > maxCameraY) cameraY = maxCameraY;
+
+    //맵 전환 조건 
+    int tileX = playerRect.x / TILE_SIZE;
+    int tileY = playerRect.y / TILE_SIZE;
+
+
+    if (currentMap == tileMap1 && tileX == 19 && tileY == 13) { // (19,19)을 출구로 사용
+        currentMap = tileMap2;
+        playerRect.x = 1 * TILE_SIZE;
+        playerRect.y = 1 * TILE_SIZE;
+        printf(">>> MAP 2로 이등 \n");
+    }
+    else if (currentMap == tileMap2 && tileX == 19 && tileY == 13) { // (19,19을 출구로 사용)
+        currentMap = tileMap1;
+        playerRect.x = 18 * TILE_SIZE;
+        playerRect.y = 8 * TILE_SIZE;
+        printf(">>> MAP 1로 이동\n");
+    }
 }
