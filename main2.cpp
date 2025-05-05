@@ -12,37 +12,41 @@ const int MAP_HEIGHT = 30;
 const int SPEED = 5;
 
 int tileMap1[MAP_HEIGHT][MAP_WIDTH] = {
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    {2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
 int tileMap2[MAP_HEIGHT][MAP_WIDTH] = { 
-    {0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0},
-    {0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,2}
+    {0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1},
+    {0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1},
+    {0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,2,0,1},
+    {0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 }; //타일 배열 0 : 이동가능 , 1: 벽 , 2: 포탈
 
 int cameraX = 0; //카메라 x
@@ -54,6 +58,13 @@ SDL_Renderer* renderer = nullptr;
 SDL_Texture* mapTexture = nullptr;
 SDL_Texture* playerTexture = nullptr;
 SDL_Rect playerRect = { 0 * TILE_SIZE, 0 * TILE_SIZE, TILE_SIZE, TILE_SIZE };
+
+struct Enemy {
+    SDL_Rect rect;
+    int speed = 5;
+};
+
+Enemy enemy = { {0,0, TILE_SIZE, TILE_SIZE} };
 
 bool Init();
 void HandleInput(bool& isRunning);
@@ -114,6 +125,10 @@ bool Init() {
 
 }
 
+bool IsCollding(SDL_Rect a, SDL_Rect b) {
+    return SDL_HasIntersection(&a, &b);
+}
+
 void HandleInput(bool& isRunning) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -134,8 +149,16 @@ void Render() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
+
     //타일맵 렌더링 
     RenderMap(mapTexture);
+
+    //적 렌더링 
+    SDL_SetRenderDrawColor(renderer, 150, 75, 0, 0);
+    SDL_Rect screenEnemy = enemy.rect;
+    screenEnemy.x -= cameraX;
+    screenEnemy.y -= cameraY;
+    SDL_RenderFillRect(renderer, &screenEnemy);
 
     //플레이어 랜더링
     //플레이어 위치 보정 
@@ -185,6 +208,15 @@ bool IsWalkable(int x, int y) {
     return currentMap[tileY][tileX] == 0 || currentMap[tileY][tileX] == 2;
 }
 
+bool CanMoveTo(int x, int y) {
+    //적의 사각형 네 꼭짓점 모두 검사 
+    return
+        IsWalkable(x, y) &&
+        IsWalkable(x + TILE_SIZE - 1, y) &&
+        IsWalkable(x, y + TILE_SIZE - 1) &&
+        IsWalkable(x + TILE_SIZE - 1, y + TILE_SIZE - 1);
+}
+
 //충돌 검사 후 이동 허용
 void TryMovePlayer(int dx, int dy) {
     int nextX = playerRect.x + dx;
@@ -202,7 +234,50 @@ void TryMovePlayer(int dx, int dy) {
     }
 }
 
+void MoveEnemyTowardsPlayer() {
+    int dx = playerRect.x - enemy.rect.x;
+    int dy = playerRect.y - enemy.rect.y;
+
+    int moveX = 0, moveY = 0;
+
+    //x또는 y중 더 먼방향 우선
+    if (abs(dx) > abs(dy)) {
+        moveX = (dx > 0) ? enemy.speed : -enemy.speed;
+        if (!CanMoveTo(enemy.rect.x + moveX, enemy.rect.y)) moveX = 0;
+
+        if (moveX == 0) { //x로 못가면 y로 시도
+            moveY = (dy > 0) ? enemy.speed : -enemy.speed;
+            if (!CanMoveTo(enemy.rect.x, enemy.rect.y + moveY)) moveY = 0;
+
+        }
+    }
+    else {
+        moveY = (dy > 0) ? enemy.speed : -enemy.speed;
+        if (!CanMoveTo(enemy.rect.x, enemy.rect.y +moveY)) moveY = 0;
+
+        if (moveY == 0) {
+            moveX = (dx > 0) ? enemy.speed : -enemy.speed;
+            if (!CanMoveTo(enemy.rect.x + moveX, enemy.rect.y)) moveX = 0;
+        }
+    }
+
+    enemy.rect.x += moveX;
+    enemy.rect.y += moveY;
+}
+
 void Update() {
+    MoveEnemyTowardsPlayer();
+
+    //플레이어 적 충돌 시 리셋 
+    if (IsCollding(playerRect, enemy.rect)) {
+        currentMap = tileMap1; //1라운드로 복귀 
+        playerRect.x = 7 * TILE_SIZE;
+        playerRect.y = 0 * TILE_SIZE;
+        enemy.rect.x = 0;
+        enemy.rect.y = 0;
+        printf("적과 충돌! 게임이 리셋됩니다.");
+    }
+
     //카메라 위치 계산 
     cameraX = playerRect.x - WINDOW_WIDTH / 2 + TILE_SIZE / 2;
     cameraY = playerRect.y - WINDOW_HEIGHT / 2 + TILE_SIZE / 2;
@@ -224,13 +299,17 @@ void Update() {
     if (currentMap == tileMap1 && currentMap[tileY][tileX] == 2) {
         currentMap = tileMap2;
         playerRect.x = 0 * TILE_SIZE;
-        playerRect.y = 0 * TILE_SIZE;
+        playerRect.y = 7 * TILE_SIZE;
+        enemy.rect.x = 0;
+        enemy.rect.y = 0;
         printf("스테이지 2 이동");
     }
     else if (currentMap == tileMap2 && currentMap[tileY][tileX] == 2) {
         currentMap = tileMap1;
-        playerRect.x = 0 * TILE_SIZE;
+        playerRect.x = 7 * TILE_SIZE;
         playerRect.y = 0 * TILE_SIZE;
+        enemy.rect.x = 0;
+        enemy.rect.y = 0;
         printf("스테이지 1 이동");
     }
 }
