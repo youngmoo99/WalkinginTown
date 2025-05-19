@@ -35,5 +35,11 @@
     <Image Include="C:\Users\YOUNGMOO\Downloads\map_tiles.bmp">
       <Filter>assets</Filter>
     </Image>
+    <Image Include="C:\Users\YOUNGMOO\Downloads\start_button.bmp">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="C:\Users\YOUNGMOO\Downloads\title.bmp">
+      <Filter>assets</Filter>
+    </Image>
   </ItemGroup>
 </Project>

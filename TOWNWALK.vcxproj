@@ -140,6 +140,8 @@
     <Image Include="C:\Users\YOUNGMOO\Downloads\map.bmp" />
     <Image Include="C:\Users\YOUNGMOO\Downloads\map_tiles.bmp" />
     <Image Include="C:\Users\YOUNGMOO\Downloads\player.bmp" />
+    <Image Include="C:\Users\YOUNGMOO\Downloads\start_button.bmp" />
+    <Image Include="C:\Users\YOUNGMOO\Downloads\title.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

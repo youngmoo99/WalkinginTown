@@ -2,6 +2,8 @@
 #include <SDL.h>
 #include <stdio.h>
 #include <filesystem>
+#include <queue>
+#include <unordered_map>
 #pragma comment(lib, "SDL2.lib")
 
 const int WINDOW_WIDTH = 640;
@@ -50,8 +52,20 @@ int tileMap2[MAP_HEIGHT][MAP_WIDTH] = {
 }; //타일 배열 0 : 이동가능 , 1: 벽 , 2: 포탈
 
 int cameraX = 0; //카메라 x
+
 int cameraY = 0; //카메라 y
 int (*currentMap)[MAP_WIDTH] = tileMap1; // 초기 타일 
+
+enum GameState {
+    MAIN_MENU,
+    IN_GAME
+};
+GameState gameState = MAIN_MENU;
+
+SDL_Texture* titleTexture = nullptr;
+SDL_Texture* startButtonTexture = nullptr;
+SDL_Rect startButtonRect = { 220, 300, 200, 100 }; // 버튼 위치와 크기
+
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -62,9 +76,11 @@ SDL_Rect playerRect = { 0 * TILE_SIZE, 0 * TILE_SIZE, TILE_SIZE, TILE_SIZE };
 struct Enemy {
     SDL_Rect rect;
     int speed = 5;
+    int targetX;
+    int targetY;
 };
 
-Enemy enemy = { {0,0, TILE_SIZE, TILE_SIZE} };
+Enemy enemy = { {0,0, TILE_SIZE, TILE_SIZE}, 5, 0, 0};
 
 bool Init();
 void HandleInput(bool& isRunning);
@@ -73,6 +89,93 @@ void Render();
 void Cleanup();
 void RenderMap(SDL_Texture* tileTexture);
 void TryMovePlayer(int dx, int dy);
+
+struct Node
+{
+    int x, y;
+    int gCost, hCost;
+    Node* parent;
+
+    Node(int x, int y, int gCost, int hCost, Node* parent = nullptr)
+        : x(x), y(y), gCost(gCost), hCost(hCost), parent(parent) {}
+
+    int getFCost() const {
+        return gCost + hCost;
+    }
+
+    //노드 비교를 위한 연산자 오버로딩 
+    bool operator<(const Node& other) const {
+        return getFCost() > other.getFCost();
+    }
+
+};
+bool IsWalkable(int x, int y) {
+    int tileX = x / TILE_SIZE;
+    int tileY = y / TILE_SIZE;
+
+    if (tileX < 0 || tileY < 0 || tileX >= MAP_WIDTH || tileY >= MAP_HEIGHT) return false;
+
+    int tileType = currentMap[tileY][tileX];
+    return tileType == 0 || tileType == 2;
+}
+
+std::vector<Node> FindPath(int startX, int startY, int endX, int endY) {
+    std::priority_queue<Node> openList;
+    std::unordered_map<int, Node*> closedList;
+
+    Node* startNode = new Node(startX, startY, 0, abs(endX - startX) + abs(endY - startY));
+    openList.push(*startNode);
+
+    std::vector<Node> path;
+
+    while (!openList.empty()) {
+        Node current = openList.top();
+        openList.pop();
+
+        // 도착지에 도달했을 때
+        if (current.x == endX && current.y == endY) {
+            Node* node = &current;
+            while (node != nullptr) {
+                path.push_back(*node);
+                node = node->parent;
+            }
+            std::reverse(path.begin(), path.end());
+
+            // 메모리 해제
+            for (auto& pair : closedList) {
+                delete pair.second;
+            }
+
+            return path;
+        }
+
+        // 이미 방문한 노드이면 무시
+        int nodeKey = current.y * MAP_WIDTH + current.x;
+        if (closedList.count(nodeKey)) continue;
+        closedList[nodeKey] = new Node(current);
+
+        // 네 방향으로 확장
+        int dx[] = { 1, -1, 0, 0 };
+        int dy[] = { 0, 0, 1, -1 };
+
+        for (int i = 0; i < 4; i++) {
+            int nx = current.x + dx[i];
+            int ny = current.y + dy[i];
+
+            if (IsWalkable(nx * TILE_SIZE, ny * TILE_SIZE)) {
+                int gCost = current.gCost + 1;
+                int hCost = abs(endX - nx) + abs(endY - ny);
+                Node* parentNode = closedList[nodeKey];
+                Node neighbor(nx, ny, gCost, hCost, parentNode);
+
+                openList.push(neighbor);
+            }
+        }
+    }
+
+    // 경로를 찾지 못한 경우 빈 벡터 반환
+    return path;
+}
 
 int main(int argc, char* argv[])
 {
@@ -96,7 +199,7 @@ bool Init() {
         return false;
     }
 
-    window = SDL_CreateWindow("Walking town",
+    window = SDL_CreateWindow("Run Away",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
 
@@ -111,6 +214,7 @@ bool Init() {
         return false;
     }
 
+
     //맵 타일 이미지 불러오기 
     SDL_Surface* mapSurface = SDL_LoadBMP("assets/map_tiles.bmp");
     mapTexture = SDL_CreateTextureFromSurface(renderer, mapSurface);
@@ -120,6 +224,18 @@ bool Init() {
     SDL_Surface* playerSurface = SDL_LoadBMP("assets/player.bmp"); // bmp파일을 읽어 SDL_Surface로 반환 
     playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface); // SDL_SURFACE를 GPU 텍스처로 변환
     SDL_FreeSurface(playerSurface); // 쓸일이 없는 Surface 메모리 해제
+
+    // 타이틀 이미지 로드
+    SDL_Surface* titleSurface = SDL_LoadBMP("assets/title.bmp");
+    titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
+    SDL_FreeSurface(titleSurface);
+
+    // 시작 버튼 이미지 로드
+    SDL_Surface* startButtonSurface = SDL_LoadBMP("assets/start_button.bmp");
+    startButtonTexture = SDL_CreateTextureFromSurface(renderer, startButtonSurface);
+    SDL_FreeSurface(startButtonSurface);
+
+
 
     return true;
 
@@ -134,46 +250,82 @@ void HandleInput(bool& isRunning) {
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT)
             isRunning = false;
+
+        // 메인 메뉴에서 버튼 클릭 처리
+        if (gameState == MAIN_MENU && event.type == SDL_MOUSEBUTTONDOWN) {
+            int mouseX = event.button.x;
+            int mouseY = event.button.y;
+
+            // START 버튼 클릭 감지
+            if (mouseX >= startButtonRect.x && mouseX <= startButtonRect.x + startButtonRect.w &&
+                mouseY >= startButtonRect.y && mouseY <= startButtonRect.y + startButtonRect.h) {
+                gameState = IN_GAME;
+                printf("게임 시작!\n");
+            }
+        }
     }
 
-    const Uint8* keys = SDL_GetKeyboardState(NULL);
-
-    if (keys[SDL_SCANCODE_LEFT]) TryMovePlayer(-SPEED, 0);
-    if (keys[SDL_SCANCODE_RIGHT]) TryMovePlayer(SPEED, 0);
-    if (keys[SDL_SCANCODE_UP]) TryMovePlayer(0, -SPEED);
-    if (keys[SDL_SCANCODE_DOWN]) TryMovePlayer(0, SPEED);
-
+    // 게임 중 플레이어 이동
+    if (gameState == IN_GAME) {
+        const Uint8* keys = SDL_GetKeyboardState(NULL);
+        if (keys[SDL_SCANCODE_LEFT]) TryMovePlayer(-SPEED, 0);
+        if (keys[SDL_SCANCODE_RIGHT]) TryMovePlayer(SPEED, 0);
+        if (keys[SDL_SCANCODE_UP]) TryMovePlayer(0, -SPEED);
+        if (keys[SDL_SCANCODE_DOWN]) TryMovePlayer(0, SPEED);
+    }
 }
 
-void Render() {
+
+void RenderMainMenu() {
+    // 배경 색 설정
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
+    // 타이틀 렌더링
+    SDL_Rect titleRect = { 120, 100, 400, 150 };
+    SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
 
-    //타일맵 렌더링 
-    RenderMap(mapTexture);
+    // START 버튼 렌더링
+    SDL_RenderCopy(renderer, startButtonTexture, NULL, &startButtonRect);
 
-    //적 렌더링 
-    SDL_SetRenderDrawColor(renderer, 150, 75, 0, 0);
-    SDL_Rect screenEnemy = enemy.rect;
-    screenEnemy.x -= cameraX;
-    screenEnemy.y -= cameraY;
-    SDL_RenderFillRect(renderer, &screenEnemy);
-
-    //플레이어 랜더링
-    //플레이어 위치 보정 
-    SDL_Rect screenPlayer = playerRect;
-    screenPlayer.x -= cameraX;
-    screenPlayer.y -= cameraY;
-
-    SDL_RenderCopy(renderer, playerTexture, NULL, &screenPlayer);
     SDL_RenderPresent(renderer);
+}
+
+
+void Render() {
+    if (gameState == MAIN_MENU) {
+        RenderMainMenu();
+    }
+    else if (gameState == IN_GAME) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        // 타일맵 렌더링
+        RenderMap(mapTexture);
+
+        // 적 렌더링
+        SDL_SetRenderDrawColor(renderer, 150, 75, 0, 255);
+        SDL_Rect screenEnemy = enemy.rect;
+        screenEnemy.x -= cameraX;
+        screenEnemy.y -= cameraY;
+        SDL_RenderFillRect(renderer, &screenEnemy);
+
+        // 플레이어 렌더링
+        SDL_Rect screenPlayer = playerRect;
+        screenPlayer.x -= cameraX;
+        screenPlayer.y -= cameraY;
+        SDL_RenderCopy(renderer, playerTexture, NULL, &screenPlayer);
+
+        SDL_RenderPresent(renderer);
+    }
 
 }
 
 void Cleanup() {
     SDL_DestroyTexture(mapTexture);
     SDL_DestroyTexture(playerTexture);
+    SDL_DestroyTexture(titleTexture);
+    SDL_DestroyTexture(startButtonTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -199,14 +351,7 @@ void RenderMap(SDL_Texture* tileTexture) {
     }
 }
 
-bool IsWalkable(int x, int y) {
-    int tileX = x / TILE_SIZE;
-    int tileY = y / TILE_SIZE;
 
-    if (tileX < 0 || tileY < 0 || tileX >= MAP_WIDTH || tileY >= MAP_HEIGHT) return false;
-
-    return currentMap[tileY][tileX] == 0 || currentMap[tileY][tileX] == 2;
-}
 
 bool CanMoveTo(int x, int y) {
     //적의 사각형 네 꼭짓점 모두 검사 
@@ -235,81 +380,83 @@ void TryMovePlayer(int dx, int dy) {
 }
 
 void MoveEnemyTowardsPlayer() {
-    int dx = playerRect.x - enemy.rect.x;
-    int dy = playerRect.y - enemy.rect.y;
+    //현재 적의 타일 좌표
+    int enemyTileX = enemy.rect.x / TILE_SIZE;
+    int enemyTileY = enemy.rect.y / TILE_SIZE;
+    int playerTileX = playerRect.x / TILE_SIZE;
+    int playerTileY = playerRect.y / TILE_SIZE;
 
-    int moveX = 0, moveY = 0;
+    // 경로를 아직 찾지 않았거나 목표에 도달한 경우 새로운 경로 찾기
+    if (enemy.rect.x == enemy.targetX && enemy.rect.y == enemy.targetY) {
+        std::vector<Node> path = FindPath(enemyTileX, enemyTileY, playerTileX, playerTileY);
 
-    //x또는 y중 더 먼방향 우선
-    if (abs(dx) > abs(dy)) {
-        moveX = (dx > 0) ? enemy.speed : -enemy.speed;
-        if (!CanMoveTo(enemy.rect.x + moveX, enemy.rect.y)) moveX = 0;
-
-        if (moveX == 0) { //x로 못가면 y로 시도
-            moveY = (dy > 0) ? enemy.speed : -enemy.speed;
-            if (!CanMoveTo(enemy.rect.x, enemy.rect.y + moveY)) moveY = 0;
-
-        }
-    }
-    else {
-        moveY = (dy > 0) ? enemy.speed : -enemy.speed;
-        if (!CanMoveTo(enemy.rect.x, enemy.rect.y +moveY)) moveY = 0;
-
-        if (moveY == 0) {
-            moveX = (dx > 0) ? enemy.speed : -enemy.speed;
-            if (!CanMoveTo(enemy.rect.x + moveX, enemy.rect.y)) moveX = 0;
+        // 유효한 경로가 있으면 다음 목표 노드를 설정
+        if (path.size() > 1) {
+            Node nextStep = path[1];
+            enemy.targetX = nextStep.x * TILE_SIZE;
+            enemy.targetY = nextStep.y * TILE_SIZE;
         }
     }
 
-    enemy.rect.x += moveX;
-    enemy.rect.y += moveY;
+    // 적이 목표 방향으로 움직이도록 설정 (속도 제한)
+    if (enemy.rect.x < enemy.targetX) enemy.rect.x += std::min(enemy.speed, enemy.targetX - enemy.rect.x);
+    if (enemy.rect.x > enemy.targetX) enemy.rect.x -= std::min(enemy.speed, enemy.rect.x - enemy.targetX);
+    if (enemy.rect.y < enemy.targetY) enemy.rect.y += std::min(enemy.speed, enemy.targetY - enemy.rect.y);
+    if (enemy.rect.y > enemy.targetY) enemy.rect.y -= std::min(enemy.speed, enemy.rect.y - enemy.targetY);
 }
 
 void Update() {
-    MoveEnemyTowardsPlayer();
+    if (gameState == IN_GAME) {
+        MoveEnemyTowardsPlayer();
 
-    //플레이어 적 충돌 시 리셋 
-    if (IsCollding(playerRect, enemy.rect)) {
-        currentMap = tileMap1; //1라운드로 복귀 
-        playerRect.x = 7 * TILE_SIZE;
-        playerRect.y = 0 * TILE_SIZE;
-        enemy.rect.x = 0;
-        enemy.rect.y = 0;
-        printf("적과 충돌! 게임이 리셋됩니다.");
-    }
+        // 플레이어와 적 충돌 시 리셋
+        if (IsCollding(playerRect, enemy.rect)) {
+            currentMap = tileMap1; // 1라운드로 복귀
+            playerRect.x = 7 * TILE_SIZE;
+            playerRect.y = 0 * TILE_SIZE;
+            enemy.rect.x = 0;
+            enemy.rect.y = 0;
+            enemy.targetX = 0;
+            enemy.targetY = 0;
+            printf("적과 충돌! 게임이 리셋됩니다.\n");
+        }
 
-    //카메라 위치 계산 
-    cameraX = playerRect.x - WINDOW_WIDTH / 2 + TILE_SIZE / 2;
-    cameraY = playerRect.y - WINDOW_HEIGHT / 2 + TILE_SIZE / 2;
+        // 맵 전환 조건
+        int tileX = playerRect.x / TILE_SIZE;
+        int tileY = playerRect.y / TILE_SIZE;
 
-    //카메라가 맨 바깥으로 못나가게 고정 
-    if (cameraX < 0) cameraX = 0;
-    if (cameraY < 0) cameraY = 0;
+        if (currentMap == tileMap1 && currentMap[tileY][tileX] == 2) {
+            currentMap = tileMap2;
+            playerRect.x = 0 * TILE_SIZE;
+            playerRect.y = 7 * TILE_SIZE;
+            enemy.rect.x = 0;
+            enemy.rect.y = 0;
+            enemy.targetX = 0;
+            enemy.targetY = 0;
+            printf("스테이지 2로 이동\n");
+        }
+        else if (currentMap == tileMap2 && currentMap[tileY][tileX] == 2) {
+            currentMap = tileMap1;
+            playerRect.x = 7 * TILE_SIZE;
+            playerRect.y = 0 * TILE_SIZE;
+            enemy.rect.x = 0;
+            enemy.rect.y = 0;
+            enemy.targetX = 0;
+            enemy.targetY = 0;
+            printf("스테이지 1로 이동\n");
+        }
 
-    int maxCameraX = MAP_WIDTH * TILE_SIZE - WINDOW_WIDTH;
-    int maxCameraY = MAP_HEIGHT * TILE_SIZE - WINDOW_HEIGHT;
+        // 카메라 위치 계산
+        cameraX = playerRect.x - WINDOW_WIDTH / 2 + TILE_SIZE / 2;
+        cameraY = playerRect.y - WINDOW_HEIGHT / 2 + TILE_SIZE / 2;
 
-    if (cameraX > maxCameraX) cameraX = maxCameraX;
-    if (cameraY > maxCameraY) cameraY = maxCameraY;
+        if (cameraX < 0) cameraX = 0;
+        if (cameraY < 0) cameraY = 0;
 
-    //맵 전환 조건 
-    int tileX = playerRect.x / TILE_SIZE;
-    int tileY = playerRect.y / TILE_SIZE;
+        int maxCameraX = MAP_WIDTH * TILE_SIZE - WINDOW_WIDTH;
+        int maxCameraY = MAP_HEIGHT * TILE_SIZE - WINDOW_HEIGHT;
 
-    if (currentMap == tileMap1 && currentMap[tileY][tileX] == 2) {
-        currentMap = tileMap2;
-        playerRect.x = 0 * TILE_SIZE;
-        playerRect.y = 7 * TILE_SIZE;
-        enemy.rect.x = 0;
-        enemy.rect.y = 0;
-        printf("스테이지 2 이동");
-    }
-    else if (currentMap == tileMap2 && currentMap[tileY][tileX] == 2) {
-        currentMap = tileMap1;
-        playerRect.x = 7 * TILE_SIZE;
-        playerRect.y = 0 * TILE_SIZE;
-        enemy.rect.x = 0;
-        enemy.rect.y = 0;
-        printf("스테이지 1 이동");
+        if (cameraX > maxCameraX) cameraX = maxCameraX;
+        if (cameraY > maxCameraY) cameraY = maxCameraY;
     }
 }
