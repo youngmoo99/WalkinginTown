@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <queue>
 #include <unordered_map>
+#include <SDL_mixer.h>
+#pragma comment(lib, "SDL2_mixer.lib")
 #pragma comment(lib, "SDL2.lib")
 
 const int WINDOW_WIDTH = 640;
@@ -12,6 +14,7 @@ const int TILE_SIZE = 32;
 const int MAP_WIDTH = 50;
 const int MAP_HEIGHT = 30;
 const int SPEED = 5;
+Mix_Music* bgm = nullptr;
 
 int tileMap1[MAP_HEIGHT][MAP_WIDTH] = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -198,6 +201,10 @@ bool Init() {
         printf("SDL_Init Error: %s\n", SDL_GetError());
         return false;
     }
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
+        return false;
+    }
 
     window = SDL_CreateWindow("Run Away",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -213,7 +220,6 @@ bool Init() {
         printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
         return false;
     }
-
 
     //맵 타일 이미지 불러오기 
     SDL_Surface* mapSurface = SDL_LoadBMP("assets/map_tiles.bmp");
@@ -235,7 +241,14 @@ bool Init() {
     startButtonTexture = SDL_CreateTextureFromSurface(renderer, startButtonSurface);
     SDL_FreeSurface(startButtonSurface);
 
+    //bgm 로드 
+    bgm = Mix_LoadMUS("assets/bgm.mp3");
+    if (!bgm) {
+        printf("Failed to load background music! SDL_mixer Error: %s\n", Mix_GetError());
+        return false;
+    }
 
+    Mix_PlayMusic(bgm, -1); // -1이면 무한 반복 재생
 
     return true;
 
@@ -246,6 +259,7 @@ bool IsCollding(SDL_Rect a, SDL_Rect b) {
 }
 
 void HandleInput(bool& isRunning) {
+    
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT)
@@ -322,6 +336,10 @@ void Render() {
 }
 
 void Cleanup() {
+    Mix_FreeMusic(bgm);
+    bgm = nullptr;
+
+    Mix_CloseAudio();
     SDL_DestroyTexture(mapTexture);
     SDL_DestroyTexture(playerTexture);
     SDL_DestroyTexture(titleTexture);

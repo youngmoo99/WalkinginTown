@@ -104,14 +104,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\SDL2WorkSpace\SDL2-2.26.4\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\SDL2WorkSpace\SDL2-2.26.4\include;E:\SDL2WorkSpace\SDL2_mixer-2.8.1\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\SDL2WorkSpace\SDL2-2.26.4\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:\SDL2WorkSpace\SDL2-2.26.4\lib\x64;E:\SDL2WorkSpace\SDL2_mixer-2.8.1\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2_mixer.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,6 +142,9 @@
     <Image Include="C:\Users\YOUNGMOO\Downloads\player.bmp" />
     <Image Include="C:\Users\YOUNGMOO\Downloads\start_button.bmp" />
     <Image Include="C:\Users\YOUNGMOO\Downloads\title.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="assets\bgm.mp3" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

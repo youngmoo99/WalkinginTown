@@ -42,4 +42,9 @@
       <Filter>assets</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="assets\bgm.mp3">
+      <Filter>assets</Filter>
+    </Media>
+  </ItemGroup>
 </Project>
